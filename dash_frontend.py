@@ -20,6 +20,8 @@ from nltk.tokenize import word_tokenize
 import openai
 from openai import OpenAI
 import os
+from sim_class import Simulator
+
 
 with open('openai_key.json', 'r') as file:
     data = json.load(file)
@@ -1281,6 +1283,5 @@ def handle_query(n_clicks, query, history, active_tab):
 
 
 if __name__ == '__main__':
-    print("Starting server...")
-    app.run_server(debug=True, host='0.0.0.0', port=8050)
-    print("Server stopped.")
+    app.run_server(debug=True, host='localhost', port=8050)
+
