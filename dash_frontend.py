@@ -179,7 +179,7 @@ def create_initial_map_layout():
         Input('upload-data', 'contents'),
         Input('add-location-btn', 'n_clicks'),
         Input('clear-locations-btn', 'n_clicks'),
-        Input('clear-selected-btn', 'n_clicks')
+        Input('locations-table', 'data_timestamp')
     ],
     [
         State('upload-data', 'filename'),
@@ -191,26 +191,16 @@ def create_initial_map_layout():
         State('input-vaccination-rate', 'value'),
         State('input-mobility-toggle', 'value'),
         State('location-data-store', 'data'),
-        State('locations-table', 'selected_rows')
-    ],
-    prevent_initial_call=True
+        State('locations-table', 'data')
+    ]
 )
-def unified_data_handler(contents, add_clicks, clear_all_clicks, clear_selected_clicks,
+def unified_data_handler(contents, add_clicks, clear_clicks, table_timestamp,
                          filenames, name, x, y, population, infection_source,
-                         vaccination_rate, mobility, existing_data, selected_rows):
+                         vaccination_rate, mobility, existing_data, table_data):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if triggered_id == 'clear-locations-btn':
-        return []  # Clears all locations
-
-    if triggered_id == 'clear-selected-btn':
-        if selected_rows is not None:
-            return [row for index, row in enumerate(existing_data) if index not in selected_rows]
-        return existing_data
-
     if triggered_id == 'upload-data' and contents:
-        # Handle file upload
         combined_data = existing_data[:]
         for content, filename in zip(contents, filenames):
             content_type, content_string = content.split(',')
@@ -221,7 +211,7 @@ def unified_data_handler(contents, add_clicks, clear_all_clicks, clear_selected_
                 combined_data += new_data
         return combined_data
 
-    if triggered_id == 'add-location-btn' and name:
+    elif triggered_id == 'add-location-btn' and name:
         mobility_text = "Yes" if mobility else "No"
         new_entry = sf.standardize_data_keys([{
             'Name': name,
@@ -232,7 +222,15 @@ def unified_data_handler(contents, add_clicks, clear_all_clicks, clear_selected_
             'Vaccination Rate': vaccination_rate,
             'Mobility': mobility_text 
         }])[0]
-        return existing_data + [new_entry]
+        updated_data = existing_data[:]
+        updated_data.append(new_entry)
+        return updated_data
+
+    elif triggered_id == 'clear-locations-btn':
+        return []  
+
+    if triggered_id == 'locations-table':
+        return table_data
 
     return existing_data
 
