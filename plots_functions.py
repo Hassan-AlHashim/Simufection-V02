@@ -254,12 +254,12 @@ def build_map_traces(state, coords, tau, map_type='mapbox'):
         )
     ]
 
-    line_base_width = 1 
+    line_base_width = 0.5
     for i in range(len(coords)):
         for j in range(i + 1, len(coords)):
             tau_sum = tau[i, j].sum()
             if tau_sum > 0:
-                width = max(line_base_width, 2 * tau_sum)  
+                width = max(line_base_width, tau_sum/10000)  
                 traces.append(scatter_class(
                     lat=[coords[i, 0], coords[j, 0]],
                     lon=[coords[i, 1], coords[j, 1]],

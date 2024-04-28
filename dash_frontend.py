@@ -175,31 +175,42 @@ def create_initial_map_layout():
 
 @app.callback(
     Output('location-data-store', 'data'),
-    [Input('upload-data', 'contents'),
-     Input('add-location-btn', 'n_clicks'),
-     Input('clear-locations-btn', 'n_clicks'),
-     Input('locations-table', 'data_timestamp')],
-    [State('upload-data', 'filename'),
-     State('input-location-name', 'value'),
-     State('input-x-coordinate', 'value'),
-     State('input-y-coordinate', 'value'),
-     State('input-population', 'value'),
-     State('input-infection-source', 'value'),
-     State('input-vaccination-rate', 'value'),
-     State('input-mobility-toggle', 'value'),
-     State('location-data-store', 'data'),
-     State('locations-table', 'data')]
+    [
+        Input('upload-data', 'contents'),
+        Input('add-location-btn', 'n_clicks'),
+        Input('clear-locations-btn', 'n_clicks'),
+        Input('clear-selected-btn', 'n_clicks')
+    ],
+    [
+        State('upload-data', 'filename'),
+        State('input-location-name', 'value'),
+        State('input-x-coordinate', 'value'),
+        State('input-y-coordinate', 'value'),
+        State('input-population', 'value'),
+        State('input-infection-source', 'value'),
+        State('input-vaccination-rate', 'value'),
+        State('input-mobility-toggle', 'value'),
+        State('location-data-store', 'data'),
+        State('locations-table', 'selected_rows')
+    ],
+    prevent_initial_call=True
 )
-def unified_data_handler(contents, add_clicks, clear_clicks, table_timestamp,
+def unified_data_handler(contents, add_clicks, clear_all_clicks, clear_selected_clicks,
                          filenames, name, x, y, population, infection_source,
-                         vaccination_rate, mobility, existing_data, table_data):
+                         vaccination_rate, mobility, existing_data, selected_rows):
     ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
+    if triggered_id == 'clear-locations-btn':
+        return []  # Clears all locations
+
+    if triggered_id == 'clear-selected-btn':
+        if selected_rows is not None:
+            return [row for index, row in enumerate(existing_data) if index not in selected_rows]
+        return existing_data
+
     if triggered_id == 'upload-data' and contents:
+        # Handle file upload
         combined_data = existing_data[:]
         for content, filename in zip(contents, filenames):
             content_type, content_string = content.split(',')
@@ -210,9 +221,8 @@ def unified_data_handler(contents, add_clicks, clear_clicks, table_timestamp,
                 combined_data += new_data
         return combined_data
 
-    elif triggered_id == 'add-location-btn' and name:
+    if triggered_id == 'add-location-btn' and name:
         mobility_text = "Yes" if mobility else "No"
-        
         new_entry = sf.standardize_data_keys([{
             'Name': name,
             'X Coordinate': x,
@@ -222,15 +232,10 @@ def unified_data_handler(contents, add_clicks, clear_clicks, table_timestamp,
             'Vaccination Rate': vaccination_rate,
             'Mobility': mobility_text 
         }])[0]
-        
-        updated_data = existing_data[:]
-        updated_data.append(new_entry)
-        return updated_data
+        return existing_data + [new_entry]
 
-    elif triggered_id == 'clear-locations-btn':
-        return []
+    return existing_data
 
-    return table_data or existing_data
 
 @app.callback(
     Output('simulation-plot', 'figure'),
