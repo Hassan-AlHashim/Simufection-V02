@@ -37,6 +37,13 @@ To execute the simulation pipeline:
 ```bash
 python run_pipeline.py
 ```
+For the chat to work: 
+
+Create an openai_key.json file with this format:
+
+{
+    "API_KEY": "YOUR KEY HERE"
+  }
 
 License
 
