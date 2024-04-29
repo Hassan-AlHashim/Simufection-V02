@@ -1,4 +1,3 @@
-
 This Python project includes various modules that work together to simulate, process, and visualize data dynamically through a web-based dashboard. The idea is to provide a user friendly interface for SIRD simulation. This project also allows for AI assisted interaction with the results of the simuation data. 
 
 Modules Description
